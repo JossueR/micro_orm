@@ -1,0 +1,23 @@
+{
+    "name": "jossuer/micro_orm",
+    "description": "ORM sencillo para acceso a bases de datos mysql",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "jossue",
+            "email": "jossue.rodriguez@gmail.com"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "MicroORM\\": "src/MicroORM"
+        }
+    },
+    "minimum-stability": "dev",
+    "require": {
+
+        "ext-mysqli": "*"
+
+    }
+}
