@@ -4,6 +4,8 @@
 namespace MicroORM;
 
 
+use Exception;
+
 class ConnectionHolder
 {
     /**
@@ -65,6 +67,31 @@ class ConnectionHolder
      */
     function getDefaultConnection(){
         return $this->getConnection($this->default);
+    }
+
+    function loadConfig($config_array){
+        if(is_array($config_array)){
+            foreach ($config_array as $config){
+                try {
+                    $ds = new Datasource($config["host"], $config["db"], $config["user"], $config["pass"]);
+
+
+                    if(isset($config["utf8"]) && $config["utf8"]){
+                        $ds->setUtf8();
+                    }
+
+                    if(isset($config["timezone"])){
+                        $ds->setTimeZone($config["timezone"]);
+                    }
+
+
+                    $this->add($config["name"], $ds);
+
+                } catch (Exception $e) {
+
+                }
+            }
+        }
     }
 
 }
