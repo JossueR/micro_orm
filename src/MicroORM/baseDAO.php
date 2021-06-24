@@ -243,11 +243,20 @@ class baseDAO
 
     /**
      * @param string $sql
+     * @param QueryParams|null $params
      */
-    public function find(string $sql){
+    public function find(string $sql, QueryParams $params=null){
         $this->lastSelectQuery = $sql;
 
-        $this->summary = $this->datasource->execQuery($sql, true, $this->query_params );
+        if($params != null){
+            if($this->query_params != null){
+                $params->copyFrom($this->query_params);
+            }
+        }else{
+            $params = $this->query_params;
+        }
+
+        $this->summary = $this->datasource->execQuery($sql, true, $params );
 
 
     }
@@ -276,7 +285,7 @@ class baseDAO
 
         $where = $this->datasource->buildSQLFilter($searchArray,"AND");
 
-        $sql = "SELECT * FROM " . $this->table . "WHERE $where";
+        $sql = "SELECT * FROM " . $this->table . " WHERE $where";
         $this->find($sql);
     }
 

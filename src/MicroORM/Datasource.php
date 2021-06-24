@@ -313,12 +313,12 @@ class Datasource
         return implode(" ", $flags);
     }
 
-    public function setCollation($collation){
-        @mysqli_query($this->connection, "SET NAMES '$collation'");
+    public function setCharset($collation){
+        mysqli_set_charset($collation, $this->connection);
     }
 
     public function setUtf8(){
-        $this->setCollation("utf8");
+        $this->setCharset("utf8");
     }
 
 

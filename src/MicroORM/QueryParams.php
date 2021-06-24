@@ -11,6 +11,10 @@ class QueryParams
 
     private $enable_paging = false;
     private $enable_order = false;
+    /**
+     * @var array
+     */
+    private $order_fields;
 
     /**
      * @var string
@@ -23,9 +27,9 @@ class QueryParams
 
 
     /**
-     * @return string
+     * @return string|null
      */
-    public function getPaginationReplaceTag(): string
+    public function getPaginationReplaceTag(): ?string
     {
         return $this->pagination_replace_tag;
     }
@@ -39,9 +43,9 @@ class QueryParams
     }
 
     /**
-     * @return string
+     * @return string|null
      */
-    public function getOrderReplaceTag(): string
+    public function getOrderReplaceTag(): ?string
     {
         return $this->order_replace_tag;
     }
@@ -58,10 +62,7 @@ class QueryParams
 
 
 
-    /**
-     * @var array
-     */
-    private $order_fields;
+
 
 
     /**
@@ -130,5 +131,14 @@ class QueryParams
             $this->order_fields = array();
         }
         return $this->order_fields;
+    }
+
+    public function copyFrom(QueryParams $old){
+        $this->page = $old->page;
+
+        $this->cant_by_page = $old->cant_by_page;
+        $this->enable_paging=$old->enable_paging;
+        $this->enable_order = $old->enable_order;
+        $this->order_fields = $old->order_fields;
     }
 }
