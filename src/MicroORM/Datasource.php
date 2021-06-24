@@ -44,10 +44,17 @@ class Datasource
     /**
      * @param $sql
      * @param bool $isSelect
+     * @param QueryParams|null $params
+     * @return QueryInfo
      */
-    function &execQuery($sql, $isSelect= true){
+    function &execQuery($sql, $isSelect= true, QueryParams $params=null): QueryInfo
+    {
         $summary = new QueryInfo();
 
+        if($isSelect && $params != null){
+            $sql = $this->addOrder($sql, $params);
+            $sql = $this->addPagination($sql, $params);
+        }
 
 
         $summary->result = @mysqli_query($this->connection, $sql );
@@ -71,7 +78,7 @@ class Datasource
         return $summary;
     }
 
-    function getNext(QueryInfo $summary)
+    function fetch(QueryInfo $summary)
     {
 
         if(!isset($summary->total) || $summary->total == 0){
@@ -92,10 +99,11 @@ class Datasource
      * @param QueryInfo $summary
      * @return array
      */
-    public function getAll(QueryInfo $summary){
+    public function fetchAll(QueryInfo $summary): array
+    {
         $valores = array();
 
-        while($row = self::getNext($summary)){
+        while($row = self::fetch($summary)){
             $valores[] = $row;
         }
 
@@ -206,7 +214,7 @@ class Datasource
         return $this->execQuery($sql, false);
     }
 
-    private function buildSQLFilter($filterArray, $join)
+    public function buildSQLFilter($filterArray, $join)
     {
         //inicializa el campo q sera devuelto
         $campos = array();
@@ -245,7 +253,7 @@ class Datasource
             $this->buildSQLFilter($searchArray, "AND");
 
         $summary = $this->execQuery($sql);
-        $row = $this->getNext($summary);
+        $row = $this->fetch($summary);
 
         if($row){
             $val = reset($row);
@@ -317,5 +325,74 @@ class Datasource
 
     public function setTimeZone($timezone){
         @mysqli_query($this->connection, "SET time_zone = '$timezone'");
+    }
+
+    private function addPagination($sql, QueryParams $params)
+    {
+        if($params != null) {
+            $page = intval($params->getPage());
+
+            //agrega limit si page es un numero mayor a cero
+            if ($params->isEnablePaging() && $page >= 0) {
+                //agrega SQL_CALC_FOUND_ROWS al query
+                $sql = trim($sql);
+                $sql = str_replace("\n", " ", $sql);
+                $exploded = explode(" ", $sql);
+                $exploded[0] .= " SQL_CALC_FOUND_ROWS ";
+                $sql = implode(" ", $exploded);
+
+
+                $desde = ($page) * $params->getCantByPage();
+
+                $sql_pagination = " LIMIT $desde, " .$params->getCantByPage();
+                if($params->getPaginationReplaceTag() != ""){
+                    $sql = str_replace($params->getPaginationReplaceTag(), $sql_pagination,$sql );
+                }else{
+                    $sql .= " " . $sql_pagination;
+                }
+
+            }
+        }
+        return $sql;
+    }
+
+    function addOrder($sql, QueryParams $params)
+    {
+        if($params) {
+            $fields = $params->getOrderFields();
+
+            $val = null;
+
+            //agrega SQL_CALC_FOUND_ROWS al query
+            $sql = trim($sql);
+
+            if (!is_null($fields) && $fields != "") {
+                if (is_array($fields) && count($fields) > 0) {
+                    $all_orders = array();
+                    foreach ($fields as $order_name => $order_type) {
+                        if($order_type){
+                            $order_type = "ASC";
+                        }else{
+                            $order_type = "DESC";
+                        }
+
+                        //if (self::validFieldExist($order_name, $sql)) {
+                        $order_name = "`$order_name`";
+                        $all_orders[] = $order_name . " " . $order_type;
+                        //}
+                    }
+                    $val = " ORDER BY " . implode(",", $all_orders);
+                }
+
+
+            }
+
+            if($params->getOrderReplaceTag() != ""){
+                $sql = str_replace($params->getOrderReplaceTag(), $val,$sql );
+            }else{
+                $sql .= " " . $val;
+            }
+        }
+        return $sql;
     }
 }

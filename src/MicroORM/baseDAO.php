@@ -28,6 +28,10 @@ class baseDAO
     private $errors;
     private $lastSelectQuery;
     private $validate;
+    /**
+     * @var QueryParams
+     */
+    private $query_params;
 
     /**
      * @throws Exception
@@ -132,7 +136,12 @@ class baseDAO
 
     }
 
-    public function save($searchArray){
+    /**
+     * @param $searchArray
+     * @return bool
+     */
+    public function save($searchArray)
+    {
 
 
 
@@ -142,22 +151,21 @@ class baseDAO
 
 
         $searchArray = $this->datasource->escape($searchArray);
+        $idArray = $this->extractID($searchArray);
 
 
 
-        if($this->datasource->existBy($this->table, $searchArray)){
+        if(!$this->datasource->existBy($this->table, $idArray)){
 
             $this->summary = $this->insert($searchArray, false);
 
         }else{
-            $condition = array();
 
             foreach ($this->id as $key ) {
-                $condition[$key] = $searchArray[$key];
                 unset($searchArray[$key]);
             }
-            $this->summary = $this->update($searchArray, $condition, false);
-            $this->_history(array_merge($searchArray,$condition));
+            $this->summary = $this->update($searchArray, $idArray, false);
+            $this->_history(array_merge($searchArray,$idArray));
         }
 
         if($this->summary->errorNo != 0){
@@ -239,21 +247,40 @@ class baseDAO
     public function find(string $sql){
         $this->lastSelectQuery = $sql;
 
-        $this->summary = $this->datasource->execQuery($sql );
+        $this->summary = $this->datasource->execQuery($sql, true, $this->query_params );
 
 
     }
 
-    function getNext()
+    function fetch()
     {
-        return $this->datasource->getNext($this->summary);
+        return $this->datasource->fetch($this->summary);
     }
 
 
-    public function getAll(): array
+    public function fetchAll(): array
     {
-        return $this->datasource->getAll($this->summary);
+        return $this->datasource->fetchAll($this->summary);
     }
+
+    public function getAll()
+    {
+        $sql = "SELECT * FROM " . $this->table ;
+        $this->find($sql);
+    }
+
+    public function getById(array $params)
+    {
+        $searchArray = $this->extractID($params);
+        $searchArray = $this->datasource->escape($searchArray);
+
+        $where = $this->datasource->buildSQLFilter($searchArray,"AND");
+
+        $sql = "SELECT * FROM " . $this->table . "WHERE $where";
+        $this->find($sql);
+    }
+
+
 
     /**
      * @return Datasource
@@ -269,6 +296,24 @@ class baseDAO
     public function getSummary(): QueryInfo
     {
         return $this->summary;
+    }
+
+    function extractID($searchArray): array
+    {
+        $condition = array();
+
+        foreach ($this->id as $key ) {
+            $condition[$key] = (isset($searchArray[$key]))? $searchArray[$key] : null;
+        }
+
+        return $condition;
+    }
+
+    /**
+     * @param QueryParams $params
+     */
+    function setQueryFilters(QueryParams $params){
+        $this->query_params = $params;
     }
 
 
