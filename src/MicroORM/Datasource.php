@@ -297,7 +297,8 @@ class Datasource
         return $bin_flags;
     }
 
-    public function getFieldFlags(QueryInfo &$sumary, $i){
+    public function getFieldFlags(QueryInfo &$sumary, $i): string
+    {
 
 
         //convierte a binario, invierte y divide de uno en uno
@@ -314,7 +315,7 @@ class Datasource
     }
 
     public function setCharset($collation){
-        mysqli_set_charset($collation, $this->connection);
+        mysqli_set_charset($this->connection,$collation);
     }
 
     public function setUtf8(){

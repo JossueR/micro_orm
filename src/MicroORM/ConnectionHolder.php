@@ -65,7 +65,8 @@ class ConnectionHolder
     /**
      * @return Datasource|null
      */
-    function getDefaultConnection(){
+    function getDefaultConnection(): ?Datasource
+    {
         return $this->getConnection($this->default);
     }
 
