@@ -78,6 +78,38 @@ class Datasource
         return $summary;
     }
 
+    public function execNoQuery($sql): bool
+    {
+        $summary = $this->execQuery($sql,false);
+
+        return ($summary->errorNo == 0);
+    }
+
+    public function execAndFetch($sql, $inArray=null){
+        $summary = self::execQuery($sql, true);
+
+        if($inArray !== null){
+            $summary->inArray=$inArray;
+        }
+
+        $row = $this->fetch($summary);
+
+        $resp = null;
+
+        if($summary->errorNo == 0){
+            //si solo se estaba buscando un campo
+            if($row && self::getNumFields($summary) == 1){
+                //obtener el primer campo
+                $resp = reset($row);
+            }else{
+                $resp =  $row;
+            }
+        }
+
+
+        return $resp;
+    }
+
     function fetch(QueryInfo $summary)
     {
 
