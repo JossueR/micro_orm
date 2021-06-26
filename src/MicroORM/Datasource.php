@@ -150,7 +150,8 @@ class Datasource
         }else{
             if(is_null($str) ){
                 $str = "null";
-            }else{
+            }else if(!($str instanceof RawQueryFilter)) {
+
                 $str = "'" . mysqli_real_escape_string($this->connection, $str) . "'";
             }
         }
@@ -158,7 +159,7 @@ class Datasource
         return $str;
     }
 
-    function StartTransaction()
+    function StartTransaction(): bool
     {
         $sql = "START TRANSACTION";
         $summary = $this->execQuery($sql, false);
@@ -169,7 +170,7 @@ class Datasource
     }
 
 
-    function CommitTransaction()
+    function CommitTransaction(): bool
     {
         $sql = "COMMIT";
         $this->execQuery($sql, false);
@@ -179,7 +180,7 @@ class Datasource
         return true;
     }
 
-    function RollBackTransaction()
+    function RollBackTransaction(): bool
     {
         $sql = "ROLLBACK";
         $this->execQuery($sql, false);
@@ -189,7 +190,7 @@ class Datasource
         return true;
     }
 
-    function &_insert($table, $searchArray)
+    function &_insert($table, $searchArray): QueryInfo
     {
         //Obtiene nombre de los campos
         $def=array_keys($searchArray);
@@ -208,7 +209,7 @@ class Datasource
         return $this->execQuery($sql, false);
     }
 
-    function &_update($table, $searchArray, $condition)
+    function &_update($table, $searchArray, $condition): QueryInfo
     {
         /** @noinspection SqlWithoutWhere */
         $sql = "UPDATE $table SET ";
@@ -232,7 +233,7 @@ class Datasource
         return $this->execQuery($sql, false);
     }
 
-    function &_delete($table, $condition)
+    function &_delete($table, $condition): QueryInfo
     {
         /** @noinspection SqlWithoutWhere */
         $sql = "DELETE FROM $table ";
@@ -246,7 +247,7 @@ class Datasource
         return $this->execQuery($sql, false);
     }
 
-    public function buildSQLFilter($filterArray, $join)
+    public function buildSQLFilter(array $filterArray, $join): string
     {
         //inicializa el campo q sera devuelto
         $campos = array();
@@ -255,20 +256,26 @@ class Datasource
             //para cara elemento, ya escapado
             foreach ($filterArray as $key => $value) {
 
-                //si no tiene las comillas las pone
-                if (strpos($key, '.') === false && strpos($key, '`') === false) {
-                    $key = "`" . $key . "`";
-                }
+                if($value instanceof RawQueryFilter){
+                    $campos[] = $value->getSql();
+                }else {
 
-                //Si el elemento no es nulo
-                if($value != null){
-
-                    if($value == "null"){
-                        $campos[] = "$key IS NULL";
-                    }else{
-                        //usa igual
-                        $campos[] = "$key=".$value;
+                    //si no tiene las comillas las pone
+                    if (strpos($key, '.') === false && strpos($key, '`') === false) {
+                        $key = "`" . $key . "`";
                     }
+
+                    //Si el elemento no es nulo
+                    if ($value != null) {
+
+                        if ($value == "null") {
+                            $campos[] = "$key IS NULL";
+                        } else {
+                            //usa igual
+                            $campos[] = "$key=" . $value;
+                        }
+                    }
+
                 }
             }
         }
@@ -277,7 +284,7 @@ class Datasource
         return " (" . $campos . ") ";
     }
 
-    function existBy($table, $searchArray)
+    function existBy($table, $searchArray): bool
     {
         $sql = "SELECT COUNT(*) FROM " .
             $table .
@@ -297,7 +304,8 @@ class Datasource
         return $val > 0;
     }
 
-    public function getNumFields(QueryInfo &$sumary){
+    public function getNumFields(QueryInfo &$sumary): int
+    {
         return mysqli_num_fields($sumary->result);
     }
 
