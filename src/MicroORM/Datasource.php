@@ -47,7 +47,7 @@ class Datasource
      * @param QueryParams|null $params
      * @return QueryInfo
      */
-    function &execQuery($sql, $isSelect= true, QueryParams $params=null): QueryInfo
+    function &execQuery($sql, bool $isSelect= true, QueryParams $params=null): QueryInfo
     {
         $summary = new QueryInfo();
 

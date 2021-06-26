@@ -175,7 +175,7 @@ class baseDAO
         return ($this->summary->errorNo == 0);
     }
 
-    public function validate($searchArray): bool
+    private function validate($searchArray): bool
     {
         $errors = array();
 
@@ -325,5 +325,20 @@ class baseDAO
         $this->query_params = $params;
     }
 
+    /**
+     * @return mixed
+     */
+    public function getTable()
+    {
+        return $this->table;
+    }
 
+    protected function buildSelectBy($searchArray): string
+    {
+        $searchArray = $this->getDatasource()->escape($searchArray);
+
+        $where = $this->getDatasource()->buildSQLFilter($searchArray, "AND");
+
+        return "SELECT * FROM " . $this->table . " WHERE ". $where;
+    }
 }
