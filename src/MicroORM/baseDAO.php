@@ -245,7 +245,8 @@ class baseDAO
      * @param string $sql
      * @param QueryParams|null $params
      */
-    public function find(string $sql, QueryParams $params=null){
+    public function find(string $sql, QueryParams $params=null): bool
+    {
         $this->lastSelectQuery = $sql;
 
         if($params != null){
@@ -258,7 +259,7 @@ class baseDAO
 
         $this->summary = $this->datasource->execQuery($sql, true, $params );
 
-
+        return ($this->summary->errorNo == 0);
     }
 
     function fetch()
@@ -272,13 +273,13 @@ class baseDAO
         return $this->datasource->fetchAll($this->summary);
     }
 
-    public function getAll()
+    public function getAll(): bool
     {
         $sql = "SELECT * FROM " . $this->table ;
-        $this->find($sql);
+        return $this->find($sql);
     }
 
-    public function getById(array $params)
+    public function getById(array $params): bool
     {
         $searchArray = $this->extractID($params);
         $searchArray = $this->datasource->escape($searchArray);
@@ -286,7 +287,7 @@ class baseDAO
         $where = $this->datasource->buildSQLFilter($searchArray,"AND");
 
         $sql = "SELECT * FROM " . $this->table . " WHERE $where";
-        $this->find($sql);
+        return $this->find($sql);
     }
 
 
