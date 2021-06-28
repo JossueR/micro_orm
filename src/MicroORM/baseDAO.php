@@ -259,6 +259,10 @@ class baseDAO
 
         $this->summary = $this->datasource->execQuery($sql, true, $params );
 
+        if($this->summary->errorNo != 0){
+            $this->errors[] = $this->summary->error;
+        }
+
         return ($this->summary->errorNo == 0);
     }
 
