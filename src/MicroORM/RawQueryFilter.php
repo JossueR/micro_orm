@@ -28,5 +28,8 @@ class RawQueryFilter
         return $this->sql;
     }
 
-
+    public function __toString()
+    {
+        return $this->getSql();
+    }
 }

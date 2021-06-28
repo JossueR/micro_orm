@@ -244,6 +244,7 @@ class baseDAO
     /**
      * @param string $sql
      * @param QueryParams|null $params
+     * @return bool
      */
     public function find(string $sql, QueryParams $params=null): bool
     {
