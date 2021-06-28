@@ -257,7 +257,7 @@ class Datasource
             foreach ($filterArray as $key => $value) {
 
                 if($value instanceof RawQueryFilter){
-                    $campos[] = $value->getSql();
+                    $campos[] = $key . " " . $value->getSql();
                 }else {
 
                     //si no tiene las comillas las pone
