@@ -94,7 +94,8 @@ class baseDAO
         }
     }
 
-    function &insert($searchArray, $escape=true){
+    function &insert($searchArray, $escape=true): QueryInfo
+    {
         if($escape){
             $searchArray = $this->datasource->escape($searchArray);
         }
@@ -108,7 +109,8 @@ class baseDAO
 
     }
 
-    function &update($searchArray, $condition, $escape=true){
+    function &update($searchArray, $condition, $escape=true): QueryInfo
+    {
         if($escape){
             $condition = $this->datasource->escape($condition);
             $searchArray = $this->datasource->escape($searchArray);
@@ -116,12 +118,13 @@ class baseDAO
 
         $this->summary = $this->datasource->_update($this->table, $searchArray, $condition);
 
-        //Update no hace history por que podria no estar actualizando algo solo por id, sino multiples registros
+        //Update no hace history por que podría no estar actualizando algo solo por id, sino multiples registros
         return $this->summary;
 
     }
 
-    function &delete($condition, $escape=true){
+    function &delete($condition, $escape=true): QueryInfo
+    {
 
 
         if($escape){
@@ -143,36 +146,42 @@ class baseDAO
     public function save($searchArray)
     {
 
-
-
-        if(!$this->validate($searchArray)){
-            return false;
+        if($this->validate){
+            if(!$this->validate($searchArray)){
+                return false;
+            }
         }
 
 
-        $searchArray = $this->datasource->escape($searchArray);
-        $idArray = $this->extractID($searchArray);
+
+
+
+        $idArray = $this->datasource->escape($this->extractID($searchArray));
 
 
 
         if(!$this->datasource->existBy($this->table, $idArray)){
 
-            $this->summary = $this->insert($searchArray, false);
+            $this->summary = $this->insert($searchArray);
 
         }else{
 
             foreach ($this->id as $key ) {
                 unset($searchArray[$key]);
             }
-            $this->summary = $this->update($searchArray, $idArray, false);
+            $this->summary = $this->update($searchArray, $idArray);
             $this->_history(array_merge($searchArray,$idArray));
         }
 
         if($this->summary->errorNo != 0){
-            $this->errors[] = $this->summary->error;
+            $this->addSummaryError();
         }
 
         return ($this->summary->errorNo == 0);
+    }
+
+    private function addSummaryError(){
+        $this->errors[] = $this->summary->sql . ":" . $this->summary->error;
     }
 
     private function validate($searchArray): bool
@@ -261,7 +270,7 @@ class baseDAO
         $this->summary = $this->datasource->execQuery($sql, true, $params );
 
         if($this->summary->errorNo != 0){
-            $this->errors[] = $this->summary->error;
+            $this->addSummaryError();
         }
 
         return ($this->summary->errorNo == 0);
