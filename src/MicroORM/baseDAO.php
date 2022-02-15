@@ -169,7 +169,8 @@ class baseDAO
             foreach ($this->id as $key ) {
                 unset($searchArray[$key]);
             }
-            $this->summary = $this->update($searchArray, $idArray);
+            $updateData = $this->datasource->escape($searchArray);
+            $this->summary = $this->update($updateData, $idArray, false);
             $this->_history(array_merge($searchArray,$idArray));
         }
 
