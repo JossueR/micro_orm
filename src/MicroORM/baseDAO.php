@@ -290,7 +290,7 @@ class baseDAO
 
     public function getAll(): bool
     {
-        $sql = "SELECT * FROM " . $this->table ;
+        $sql = $this->getBaseQuery() . $this->table ;
         return $this->find($sql);
     }
 
@@ -301,7 +301,7 @@ class baseDAO
 
         $where = $this->datasource->buildSQLFilter($searchArray,"AND");
 
-        $sql = "SELECT * FROM " . $this->table . " WHERE $where";
+        $sql = $this->getBaseQuery() . " WHERE $where";
         return $this->find($sql);
     }
 
@@ -355,6 +355,27 @@ class baseDAO
 
         $where = $this->getDatasource()->buildSQLFilter($searchArray, "AND");
 
-        return "SELECT * FROM " . $this->table . " WHERE ". $where;
+        return $this->getBaseQuery() .  " WHERE ". $where;
+    }
+
+    protected function getBaseQuery(): string
+    {
+        return "SELECT * FROM " . $this->table ;
+    }
+
+    function StartTransaction(): bool
+    {
+        return $this->getDatasource()->StartTransaction();
+    }
+
+
+    function CommitTransaction(): bool
+    {
+        return $this->getDatasource()->CommitTransaction();
+    }
+
+    function RollBackTransaction(): bool
+    {
+        return $this->getDatasource()->RollBackTransaction();
     }
 }
