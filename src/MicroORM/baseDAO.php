@@ -176,7 +176,7 @@ class baseDAO
 
 
 
-        $idArray = $this->datasource->escape($this->extractID($searchArray));
+        $idArray = $this->datasource->escape($this->extractID($searchArray, false));
 
 
 
@@ -343,12 +343,12 @@ class baseDAO
         return $this->summary;
     }
 
-    function extractID($searchArray): array
+    function extractID($searchArray, $prependAlias = true): array
     {
         $condition = array();
         $alias = $this->getMainAlias();
 
-        if($alias == null){
+        if(!$prependAlias || $alias == null){
             $alias = '';
         }else{
             $alias .= ".";
