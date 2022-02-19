@@ -33,6 +33,8 @@ class baseDAO
      */
     private $query_params;
 
+    private $mainAlias;
+
     /**
      * @throws Exception
      */
@@ -54,6 +56,24 @@ class baseDAO
         $this->validate=true;
 
     }
+
+    /**
+     * @return mixed
+     */
+    public function getMainAlias()
+    {
+        return $this->mainAlias;
+    }
+
+    /**
+     * @param mixed $mainAlias
+     */
+    public function setMainAlias($mainAlias): void
+    {
+        $this->mainAlias = $mainAlias;
+    }
+
+
 
     /**
      * @return bool
@@ -326,9 +346,16 @@ class baseDAO
     function extractID($searchArray): array
     {
         $condition = array();
+        $alias = $this->getMainAlias();
+
+        if($alias == null){
+            $alias = '';
+        }else{
+            $alias .= ".";
+        }
 
         foreach ($this->id as $key ) {
-            $condition[$key] = (isset($searchArray[$key]))? $searchArray[$key] : null;
+            $condition[$alias . $key] = (isset($searchArray[$key]))? $searchArray[$key] : null;
         }
 
         return $condition;
