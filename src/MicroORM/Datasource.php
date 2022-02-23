@@ -62,8 +62,17 @@ class Datasource
         if($isSelect){
 
             $summary->total  = ($summary->result)? intval(mysqli_num_rows($summary->result)) : 0;
+
+            if($params != null && $params->isEnablePaging()){
+                $sql = "SELECT FOUND_ROWS();";
+                $rows = @mysqli_query( $this->connection, $sql);
+                $rows = mysqli_fetch_row($rows);
+
+                $summary->allRows = $rows[0];
+            }
         }else{
             $summary->total = mysqli_affected_rows($this->connection);
+            $summary->allRows = $summary->total;
             $summary->new_id = mysqli_insert_id($this->connection);
         }
 
@@ -142,7 +151,7 @@ class Datasource
         return $valores;
     }
 
-    public function escape($str){
+    public function escape($str, $putQuotes = true){
         if(is_array($str)){
             foreach ($str as $k => $v){
                 $str[$k] = $this->escape($v);
@@ -152,7 +161,11 @@ class Datasource
                 $str = "null";
             }else if(!($str instanceof RawQueryFilter)) {
 
-                $str = "'" . mysqli_real_escape_string($this->connection, $str) . "'";
+                $str = mysqli_real_escape_string($this->connection, $str);
+                if($putQuotes){
+                    $str = "'" . $str . "'";
+                }
+
             }
         }
 
