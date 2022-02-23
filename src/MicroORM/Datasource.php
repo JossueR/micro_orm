@@ -59,6 +59,13 @@ class Datasource
 
         $summary->result = @mysqli_query($this->connection, $sql );
 
+        $summary->errorNo = mysqli_errno($this->connection);
+
+        $summary->error = mysqli_error($this->connection);
+
+        //almacena en el query info el último sql
+        $summary->sql = $sql;
+
         if($isSelect){
 
             $summary->total  = ($summary->result)? intval(mysqli_num_rows($summary->result)) : 0;
@@ -76,12 +83,7 @@ class Datasource
             $summary->new_id = mysqli_insert_id($this->connection);
         }
 
-        $summary->errorNo = mysqli_errno($this->connection);
 
-        $summary->error = mysqli_error($this->connection);
-
-        //almacena en el query info el ultimo sql
-        $summary->sql = $sql;
 
 
         return $summary;
