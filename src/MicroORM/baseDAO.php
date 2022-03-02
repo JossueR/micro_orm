@@ -210,12 +210,32 @@ class baseDAO
         $errors = array();
 
         $fields = array_keys($searchArray);
-        $fields_all = implode(',', $this->datasource->escape($fields));
+        $fields_all = implode(',', $fields);
         $sql = "SELECT " . $fields_all . " FROM " . $this->table . " LIMIT 0";
         $sumary =$this->datasource->execQuery($sql);
 
         $i = 0;
         $total = $this->datasource->getNumFields($sumary);
+
+        $mysql_data_type_hash = array(
+            1=>'tinyint',
+            2=>'smallint',
+            3=>'int',
+            4=>'float',
+            5=>'double',
+            7=>'timestamp',
+            8=>'bigint',
+            9=>'mediumint',
+            10=>'date',
+            11=>'time',
+            12=>'datetime',
+            13=>'year',
+            16=>'bit',
+            //252 is currently mapped to all text and blob types (MySQL 5.0.51a)
+            253=>'varchar',
+            254=>'char',
+            246=>'decimal'
+        );
 
         while ($i < $total) {
             $f = $fields[$i];
@@ -234,7 +254,7 @@ class baseDAO
             }
 
             //verifica tipo
-            if($type == "string"){
+            if($mysql_data_type_hash[$type] == "string"){
 
                 //verifica maxlen
                 if(strlen($searchArray[$f]) > ($len / 3)){
@@ -244,7 +264,7 @@ class baseDAO
 
             }
 
-            if($type == "int"){
+            if($mysql_data_type_hash[$type] == "int"){
 
 
                 //verifica si es entero
@@ -254,7 +274,7 @@ class baseDAO
                 }
             }
 
-            if($type == "real"){
+            if($mysql_data_type_hash[$type] == "real"){
                 //verifica si es real
                 if( ($searchArray[$f] != "" && !is_numeric($searchArray[$f])) || floatval($searchArray[$f]) - $searchArray[$f] != 0 ){
                     //error no es numero real
