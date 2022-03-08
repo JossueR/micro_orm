@@ -250,7 +250,7 @@ class baseDAO
             //verifica requerido
             if(in_array("not_null", $flag)){
 
-                if($searchArray[$f] === null || $searchArray[$f] === "null" || $searchArray[$f] === ""){
+                if(!isset($searchArray[$f]) || $searchArray[$f] === "null" || $searchArray[$f] === ""){
                     //error
                     $errors[] = "$f:required";
                 }
