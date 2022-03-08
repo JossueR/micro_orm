@@ -324,12 +324,21 @@ class Datasource
         return mysqli_num_fields($sumary->result);
     }
 
+    /**
+     * @param QueryInfo $sumary
+     * @param $i
+     * Devuelve un objeto que contiene la información de definición del campo o false si no está disponible la información del campo especificada por fieldnr.
+     * @return object{name: string, table: string, type:string, max_length:int}
+     *
+     */
     public function getFieldInfo(QueryInfo &$sumary, $i){
 
-        return mysqli_fetch_field_direct($sumary->result, $i);;
+        return mysqli_fetch_field_direct($sumary->result, $i);
     }
 
-    public function getFieldType(QueryInfo &$sumary, $i){
+
+    public function getFieldType(QueryInfo &$sumary, $i)
+    {
 
         $info_campo = mysqli_fetch_field_direct($sumary->result, $i);
         return $info_campo->type;

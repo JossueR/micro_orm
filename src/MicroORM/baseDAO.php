@@ -213,10 +213,10 @@ class baseDAO
 
         $sql = "SELECT * FROM " . $this->table . " LIMIT 0";
         $summary =$this->datasource->execQuery($sql);
-        $row = $this->datasource->fetch($summary);
+        $total = $this->datasource->getNumFields($summary);
 
         $i = 0;
-        
+
 
         $mysql_data_type_hash = array(
             1=>'tinyint',
@@ -239,10 +239,12 @@ class baseDAO
             246=>'decimal'
         );
 
-        foreach ($row as $field_name => $f_val) {
-            $f = $field_name;
-            $type = $this->datasource->getFieldType($summary, $i);
-            $len = $this->datasource->getFieldLen($summary, $i);
+        while ($i < $total) {
+
+            $field_info = $this->datasource->getFieldInfo($summary, $i);
+            $f = $field_info->name;
+            $type = $field_info->type;
+            $len = $field_info->max_length;
             $flag = explode(" ", $this->datasource->getFieldFlags($summary, $i));
 
             //verifica requerido
