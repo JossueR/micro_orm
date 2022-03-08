@@ -209,13 +209,14 @@ class baseDAO
     {
         $errors = array();
 
-        $fields = array_keys($searchArray);
-        $fields_all = implode(',', $fields);
-        $sql = "SELECT " . $fields_all . " FROM " . $this->table . " LIMIT 0";
-        $sumary =$this->datasource->execQuery($sql);
+        $searchFields = array_keys($searchArray);
+
+        $sql = "SELECT * FROM " . $this->table . " LIMIT 0";
+        $summary =$this->datasource->execQuery($sql);
+        $row = $this->datasource->fetch($summary);
 
         $i = 0;
-        $total = $this->datasource->getNumFields($sumary);
+        
 
         $mysql_data_type_hash = array(
             1=>'tinyint',
@@ -238,11 +239,11 @@ class baseDAO
             246=>'decimal'
         );
 
-        while ($i < $total) {
-            $f = $fields[$i];
-            $type = $this->datasource->getFieldType($sumary, $i);
-            $len = $this->datasource->getFieldLen($sumary, $i);
-            $flag = explode(" ", $this->datasource->getFieldFlags($sumary, $i));
+        foreach ($row as $field_name => $f_val) {
+            $f = $field_name;
+            $type = $this->datasource->getFieldType($summary, $i);
+            $len = $this->datasource->getFieldLen($summary, $i);
+            $flag = explode(" ", $this->datasource->getFieldFlags($summary, $i));
 
             //verifica requerido
             if(in_array("not_null", $flag)){
@@ -254,36 +255,39 @@ class baseDAO
 
             }
 
-            //verifica tipo
-            if($mysql_data_type_hash[$type] == "string"){
+            //si el campo está en los que se desea validar
+            if(in_array($f, $searchFields)) {
 
-                //verifica maxlen
-                if(strlen($searchArray[$f]) > ($len / 3)){
-                    //error maxlen
-                    $errors[] = "$f:too_long";
+                //verifica tipo
+                if ($mysql_data_type_hash[$type] == "string") {
+
+                    //verifica maxlen
+                    if (strlen($searchArray[$f]) > ($len / 3)) {
+                        //error maxlen
+                        $errors[] = "$f:too_long";
+                    }
+
+                }
+
+                if ($mysql_data_type_hash[$type] == "int") {
+
+
+                    //verifica si es entero
+                    if (($searchArray[$f] != "" && !is_numeric($searchArray[$f])) || $searchArray[$f] - intval($searchArray[$f]) != 0) {
+                        //error no es numero entero
+                        $errors[] = "$f:no_int";
+                    }
+                }
+
+                if ($mysql_data_type_hash[$type] == "real") {
+                    //verifica si es real
+                    if (($searchArray[$f] != "" && !is_numeric($searchArray[$f])) || floatval($searchArray[$f]) - $searchArray[$f] != 0) {
+                        //error no es numero real
+                        $errors[] = "$f:no_decimal";
+                    }
                 }
 
             }
-
-            if($mysql_data_type_hash[$type] == "int"){
-
-
-                //verifica si es entero
-                if(($searchArray[$f] != "" && !is_numeric($searchArray[$f])) || $searchArray[$f] - intval($searchArray[$f]) != 0){
-                    //error no es numero entero
-                    $errors[] = "$f:no_int";
-                }
-            }
-
-            if($mysql_data_type_hash[$type] == "real"){
-                //verifica si es real
-                if( ($searchArray[$f] != "" && !is_numeric($searchArray[$f])) || floatval($searchArray[$f]) - $searchArray[$f] != 0 ){
-                    //error no es numero real
-                    $errors[] = "$f:no_decimal";
-                }
-            }
-
-
             $i++;
         }
 
