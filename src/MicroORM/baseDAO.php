@@ -166,25 +166,26 @@ class baseDAO
     public function save($searchArray)
     {
 
-        if($this->validate){
-            if(!$this->validate($searchArray)){
-                return false;
-            }
-        }
-
-
-
 
 
         $idArray = $this->datasource->escape($this->extractID($searchArray, false));
 
 
-
         if(!$this->datasource->existBy($this->table, $idArray)){
+            if($this->validate){
+                if(!$this->validate($searchArray)){
+                    return false;
+                }
+            }
 
             $this->summary = $this->insert($searchArray);
 
         }else{
+            if($this->validate){
+                if(!$this->validate($searchArray, false)){
+                    return false;
+                }
+            }
 
             foreach ($this->id as $key ) {
                 unset($searchArray[$key]);
@@ -205,13 +206,21 @@ class baseDAO
         $this->errors[] = $this->summary->sql . ":" . $this->summary->error;
     }
 
-    private function validate($searchArray): bool
+    private function validate($searchArray, $validateAll = true): bool
     {
         $errors = array();
 
         $searchFields = array_keys($searchArray);
+        $fields = array_keys($searchArray);
 
-        $sql = "SELECT * FROM " . $this->table . " LIMIT 0";
+
+        if($validateAll){
+            $fields_all = "*";
+        }else{
+            $fields_all = implode(',', $fields);
+        }
+
+        $sql = "SELECT $fields_all FROM " . $this->table . " LIMIT 0";
         $summary =$this->datasource->execQuery($sql);
         $total = $this->datasource->getNumFields($summary);
 
