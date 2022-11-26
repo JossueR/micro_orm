@@ -281,14 +281,34 @@ class Datasource
                     }
 
                     //Si el elemento no es nulo
-                    if ($value != null) {
+                    if($value != null) {
 
-                        if ($value == "null") {
+                        //si es un arreglo genera un IN
+                        if (is_array($value)) {
+
+                            //Une los valores del array y los separa por comas
+                            $value = implode(" ,", $value);
+
+
+                            //si no hay negacion
+                            if (strpos($key, "!") === false) {
+                                //almacena el filtro IN
+                                $campos[] = "$key IN(" . $value . ") ";
+                            } else {
+                                $key = str_replace("!", "", $key);
+
+                                //almacena el filtro IN
+                                $campos[] = "$key NOT IN(" . $value . ") ";
+                            }
+
+                            //Si no es un arreglo
+                        } else if ($value == "null") {
                             $campos[] = "$key IS NULL";
                         } else {
                             //usa igual
                             $campos[] = "$key=" . $value;
                         }
+
                     }
 
                 }
