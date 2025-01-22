@@ -192,7 +192,7 @@ class baseDAO
             }
             $updateData = $this->datasource->escape($searchArray);
             $this->summary = $this->update($updateData, $idArray, false);
-            $this->_history(array_merge($searchArray,$idArray));
+            $this->_history(array_merge($updateData,$idArray));
         }
 
         if($this->summary->errorNo != 0){
