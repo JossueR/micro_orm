@@ -15,6 +15,8 @@ class Datasource
      */
     private $transaction_in_process;
 
+    private ?IQueryLogger $logger;
+
     /**
      * Datasource constructor.
      * @throws Exception
@@ -25,6 +27,18 @@ class Datasource
         $this->transaction_in_process = false;
         $this->connect($host,$bd,$usuario,$pass);
     }
+
+    public function getLogger(): IQueryLogger
+    {
+        return $this->logger;
+    }
+
+    public function setLogger(IQueryLogger $logger): void
+    {
+        $this->logger = $logger;
+    }
+
+
 
 
     /**
@@ -65,6 +79,8 @@ class Datasource
 
         //almacena en el query info el último sql
         $summary->sql = $sql;
+
+        $this->logger?->log($sql, $isSelect, $summary);
 
         if($isSelect){
 
