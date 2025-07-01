@@ -108,10 +108,11 @@ class baseDAO
         $this->historyMap=$map;
     }
 
-    function _history($searchArray){
+    function _history($searchArray): ?QueryInfo{
         if($this->enableHistory){
-            $this->datasource->_insert($this->historyTable, $searchArray);
+            return $this->datasource->_insert($this->historyTable, $searchArray);
         }
+        return null;
     }
 
     function &insert($searchArray, $escape=true): QueryInfo
