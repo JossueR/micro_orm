@@ -139,7 +139,7 @@ class baseDAO
 
         $this->summary = $this->datasource->_update($this->table, $searchArray, $condition);
 
-        $this->_history($searchArray);
+        $this->_history([...$condition,...$searchArray ]);
         return $this->summary;
 
     }
