@@ -138,7 +138,7 @@ class baseDAO
 
         $this->summary = $this->datasource->_update($this->table, $searchArray, $condition);
 
-        //Update no hace history por que podría no estar actualizando algo solo por id, sino multiples registros
+        $this->_history($searchArray);
         return $this->summary;
 
     }
@@ -154,7 +154,7 @@ class baseDAO
 
         $this->summary= $this->datasource->_delete($this->table, $condition);
 
-        //$this->_history($searchArray);
+        $this->_history($condition);
         return $this->summary;
 
     }
@@ -163,7 +163,7 @@ class baseDAO
      * @param $searchArray
      * @return bool
      */
-    public function save($searchArray)
+    public function save($searchArray): bool
     {
 
 
@@ -192,7 +192,7 @@ class baseDAO
             }
             $updateData = $this->datasource->escape($searchArray);
             $this->summary = $this->update($updateData, $idArray, false);
-            $this->_history(array_merge($updateData,$idArray));
+
         }
 
         if($this->summary->errorNo != 0){
