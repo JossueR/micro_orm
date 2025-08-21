@@ -229,25 +229,33 @@ class baseDAO
 
 
         $mysql_data_type_hash = array(
-            1=>'tinyint',
-            2=>'smallint',
-            3=>'int',
-            4=>'float',
-            5=>'double',
-            7=>'timestamp',
-            8=>'bigint',
-            9=>'mediumint',
-            10=>'date',
-            11=>'time',
-            12=>'datetime',
-            13=>'year',
-            16=>'bit',
-            252=>'text',
-            //252 is currently mapped to all text and blob types (MySQL 5.0.51a)
-            253=>'varchar',
-            254=>'char',
-            246=>'decimal'
+            1 => 'tinyint',
+            2 => 'smallint',
+            3 => 'int',
+            4 => 'float',
+            5 => 'double',
+            7 => 'timestamp',
+            8 => 'bigint',
+            9 => 'mediumint',
+            10 => 'date',
+            11 => 'time',
+            12 => 'datetime',
+            13 => 'year',
+            14 => 'newdate',
+            16 => 'bit',
+            245 => 'json',
+            246 => 'decimal',
+            247 => 'enum',
+            248 => 'set',
+            249 => 'tiny_blob',
+            250 => 'medium_blob',
+            251 => 'long_blob',
+            252 => 'blob',
+            253 => 'varchar',
+            254 => 'char',
+            255 => 'geometry'
         );
+
 
         while ($i < $total) {
 
