@@ -21,11 +21,11 @@ class Datasource
      * Datasource constructor.
      * @throws Exception
      */
-    public function __construct($host,$bd,$usuario,$pass)
+    public function __construct($host,$bd,$usuario,$pass, $port=null)
     {
         $this->status=false;
         $this->transaction_in_process = false;
-        $this->connect($host,$bd,$usuario,$pass);
+        $this->connect($host,$bd,$usuario,$pass, $port);
     }
 
     public function getLogger(): IQueryLogger
@@ -44,9 +44,10 @@ class Datasource
     /**
      * @throws Exception
      */
-    private function connect($host, $bd, $usuario, $pass){
+    private function connect($host, $bd, $usuario, $pass, $port=null): void
+    {
 
-        $this->connection=mysqli_connect($host,$usuario,$pass,$bd);
+        $this->connection=mysqli_connect($host,$usuario,$pass,$bd, $port);
         if($this->connection){
             $this->status = true;
         }else{
