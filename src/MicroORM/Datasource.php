@@ -15,7 +15,7 @@ class Datasource
      */
     private $transaction_in_process;
 
-    private ?IQueryLogger $logger;
+    private ?IQueryLogger $logger = null;
 
     /**
      * Datasource constructor.
