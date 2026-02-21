@@ -16,8 +16,14 @@
     },
     "minimum-stability": "dev",
     "require": {
-
+        "php": ">=8.0",
         "ext-mysqli": "*"
-
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^9.5"
+    },
+    "scripts": {
+        "test": "phpunit",
+        "check-style": "phpcs src --standard=PSR12"
     }
 }

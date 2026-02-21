@@ -1,5 +1,5 @@
 <?php
-
+declare(strict_types=1);
 
 namespace MicroORM;
 
@@ -8,17 +8,15 @@ use Exception;
 
 class ConnectionHolder
 {
-    /**
-     * @var ConnectionHolder
-     */
-    private static $instance;
+
+    private static ?ConnectionHolder $instance = null;
 
     /**
      * ConnectionHolder constructor.
      */
     public function __construct()
     {
-        $this->lib = array();
+        $this->lib = [];
     }
 
     /**
@@ -35,8 +33,8 @@ class ConnectionHolder
 
 
 
-    protected $lib;
-    protected $default;
+    protected array $lib;
+    protected ?string $default = null;
 
     /**
      * @param $name
@@ -69,10 +67,7 @@ class ConnectionHolder
         return $this->getConnection($this->default);
     }
 
-    /**
-     * @throws Exception
-     */
-    function loadConfig($config_array): void
+    function loadConfig(array $config_array): void
     {
         if(is_array($config_array)){
             $first = true;
@@ -94,7 +89,7 @@ class ConnectionHolder
                     }
 
                     $isDefault = false;
-                    if($first || strtolower($config["name"]) == "main"){
+                    if($first || strtolower((string)$config["name"]) == "main"){
                         $isDefault = true;
                         $first = false;
                     }

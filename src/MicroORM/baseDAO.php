@@ -1,5 +1,5 @@
 <?php
-
+declare(strict_types=1);
 
 namespace MicroORM;
 
@@ -14,59 +14,52 @@ use Exception;
  */
 class baseDAO
 {
-
-    private ?Datasource $datasource = null;
+    private Datasource $datasource;
     private string $table;
     private array $id;
 
-    private $enableHistory;
-    private $historyTable;
+    private bool $enableHistory = false;
+    private ?string $historyTable = null;
     private $historyMap = false;
-    /**
-     * @var QueryInfo
-     */
+
     private QueryInfo $summary;
-    /**
-     * @var array
-     */
-    private array $errors;
+    private array $errors = [];
     private ?string $lastSelectQuery = null;
     private bool $validate = true;
-    /**
-     * @var QueryParams
-     */
-    private QueryParams $query_params;
+    private ?QueryParams $query_params = null;
 
     private ?string $mainAlias = null;
 
     /**
-     * Constructor for initializing the object with a table, identifier, and optional datasource name.
+     * Constructor for initializing the object with a table, identifier, and optional datasource.
      *
      * @param string $table The name of the database table.
      * @param array $id The identifier values for the table.
-     * @param string|null $datasource_name Optional name of the datasource connection.
-     * @return void
+     * @param string|Datasource|null $datasource Optional datasource or name of the connection.
      * @throws Exception If no connection is found.
      */
-    function __construct(string $table, array $id, ?string $datasource_name=null) {
+    public function __construct(string $table, array $id, $datasource = null)
+    {
+        if ($datasource instanceof Datasource) {
+            $this->datasource = $datasource;
+        } else {
+            $dsName = is_string($datasource) ? $datasource : null;
+            if (!$dsName) {
+                $datasourceObj = ConnectionHolder::getInstance()->getDefaultConnection();
+            } else {
+                $datasourceObj = ConnectionHolder::getInstance()->getConnection($dsName);
+            }
 
-        if(!$datasource_name){
-            $datasource = ConnectionHolder::getInstance()->getDefaultConnection();
-        }else{
-            $datasource = ConnectionHolder::getInstance()->getConnection($datasource_name);
-        }
-
-        if(!$datasource){
-            throw new Exception("No connection found");
+            if (!$datasourceObj) {
+                throw new Exception("No connection found");
+            }
+            $this->datasource = $datasourceObj;
         }
 
         $this->table = $table;
         $this->id = $id;
-        $this->datasource=$datasource;
-
-        $this->errors = array();
-        $this->validate=true;
-
+        $this->errors = [];
+        $this->validate = true;
     }
 
     /**
@@ -113,103 +106,86 @@ class baseDAO
 
 
 
-    function setHistory($table, $map): void
+    public function setHistory(string $table, $map): void
     {
         $this->enableHistory = true;
 
-        $this->historyTable=$table;
-        $this->historyMap=$map;
+        $this->historyTable = $table;
+        $this->historyMap = $map;
     }
 
-    function _history($searchArray): ?QueryInfo{
-        if($this->enableHistory){
+    public function _history(array $searchArray): ?QueryInfo
+    {
+        if ($this->enableHistory && $this->historyTable !== null) {
             return $this->datasource->_insert($this->historyTable, $searchArray);
         }
         return null;
     }
 
-    function &insert($searchArray, $escape=true): QueryInfo
+    public function &insert(array $searchArray, bool $escape = true): QueryInfo
     {
-        if($escape){
+        if ($escape) {
             $searchArray = $this->datasource->escape($searchArray);
         }
 
         $this->summary = $this->datasource->_insert($this->table, $searchArray);
 
-
-
         $this->_history($searchArray);
         return $this->summary;
-
     }
 
-    function &update($searchArray, $condition, $escape=true): QueryInfo
+    public function &update(array $searchArray, array $condition, bool $escape = true): QueryInfo
     {
-        if($escape){
+        if ($escape) {
             $condition = $this->datasource->escape($condition);
             $searchArray = $this->datasource->escape($searchArray);
         }
 
         $this->summary = $this->datasource->_update($this->table, $searchArray, $condition);
 
-        $this->_history([...$condition,...$searchArray ]);
+        $this->_history([...$condition, ...$searchArray]);
         return $this->summary;
-
     }
 
-    function &delete($condition, $escape=true): QueryInfo
+    public function &delete(array $condition, bool $escape = true): QueryInfo
     {
-
-
-        if($escape){
+        if ($escape) {
             $condition = $this->datasource->escape($condition);
         }
 
-
-        $this->summary= $this->datasource->_delete($this->table, $condition);
+        $this->summary = $this->datasource->_delete($this->table, $condition);
 
         $this->_history($condition);
         return $this->summary;
-
     }
 
-    /**
-     * @param $searchArray
-     * @return bool
-     */
-    public function save($searchArray): bool
+    public function save(array $searchArray): bool
     {
-
-
-
         $idArray = $this->datasource->escape($this->extractID($searchArray, false));
 
-
-        if(!$this->datasource->existBy($this->table, $idArray)){
-            if($this->validate){
-                if(!$this->validate($searchArray)){
+        if (!$this->datasource->existBy($this->table, $idArray)) {
+            if ($this->validate) {
+                if (!$this->validate($searchArray)) {
                     return false;
                 }
             }
 
             $this->summary = $this->insert($searchArray);
-
-        }else{
-            if($this->validate){
-                if(!$this->validate($searchArray, false)){
+        } else {
+            if ($this->validate) {
+                if (!$this->validate($searchArray, false)) {
                     return false;
                 }
             }
 
-            foreach ($this->id as $key ) {
+            foreach ($this->id as $key) {
                 unset($searchArray[$key]);
             }
             $updateData = $this->datasource->escape($searchArray);
             $this->summary = $this->update($updateData, $idArray, false);
-
         }
 
-        if($this->summary->errorNo != 0){
+        if ($this->summary->errorNo != 0) {
             $this->addSummaryError();
         }
 
@@ -220,28 +196,28 @@ class baseDAO
         $this->errors[] = $this->summary->sql . ":" . $this->summary->error;
     }
 
-    private function validate($searchArray, $validateAll = true): bool
+    private function validate(array $searchArray, bool $validateAll = true): bool
     {
-        $errors = array();
+        $errors = [];
 
         $searchFields = array_keys($searchArray);
         $fields = array_keys($searchArray);
 
 
-        if($validateAll){
+        if ($validateAll) {
             $fields_all = "*";
-        }else{
+        } else {
             $fields_all = implode(',', $fields);
         }
 
         $sql = "SELECT $fields_all FROM " . $this->table . " LIMIT 0";
-        $summary =$this->datasource->execQuery($sql);
+        $summary = $this->datasource->execQuery($sql);
         $total = $this->datasource->getNumFields($summary);
 
         $i = 0;
 
 
-        $mysql_data_type_hash = array(
+        $mysql_data_type_hash = [
             1 => 'tinyint',
             2 => 'smallint',
             3 => 'int',
@@ -267,7 +243,7 @@ class baseDAO
             253 => 'varchar',
             254 => 'char',
             255 => 'geometry'
-        );
+        ];
 
 
         while ($i < $total) {
@@ -279,34 +255,32 @@ class baseDAO
             $flag = explode(" ", $this->datasource->getFieldFlags($summary, $i));
 
             //verifica requerido
-            if(in_array("not_null", $flag)){
+            if (in_array("not_null", $flag, true)) {
 
-                if(!isset($searchArray[$f]) || $searchArray[$f] === "null" || $searchArray[$f] === ""){
+                if (!isset($searchArray[$f]) || $searchArray[$f] === "null" || $searchArray[$f] === "") {
                     //error
                     $errors[] = "$f:required";
                 }
-
             }
 
             //si el campo está en los que se desea validar
-            if(in_array($f, $searchFields)) {
+            if (in_array($f, $searchFields, true)) {
 
                 //verifica tipo
                 if ($mysql_data_type_hash[$type] == "string") {
 
                     //verifica maxlen
-                    if (strlen($searchArray[$f]) > ($len / 3)) {
+                    if (strlen((string)$searchArray[$f]) > ($len / 3)) {
                         //error maxlen
                         $errors[] = "$f:too_long";
                     }
-
                 }
 
                 if ($mysql_data_type_hash[$type] == "int") {
 
 
                     //verifica si es entero
-                    if (($searchArray[$f] != "" && !is_numeric($searchArray[$f])) || $searchArray[$f] - intval($searchArray[$f]) != 0) {
+                    if (($searchArray[$f] != "" && !is_numeric($searchArray[$f])) || (float)$searchArray[$f] - (int)$searchArray[$f] != 0) {
                         //error no es numero entero
                         $errors[] = "$f:no_int";
                     }
@@ -314,18 +288,17 @@ class baseDAO
 
                 if ($mysql_data_type_hash[$type] == "real") {
                     //verifica si es real
-                    if (($searchArray[$f] != "" && !is_numeric($searchArray[$f])) || floatval($searchArray[$f]) - $searchArray[$f] != 0) {
+                    if (($searchArray[$f] != "" && !is_numeric($searchArray[$f])) || (float)$searchArray[$f] - (float)$searchArray[$f] != 0) {
                         //error no es numero real
                         $errors[] = "$f:no_decimal";
                     }
                 }
-
             }
             $i++;
         }
 
 
-        $this->errors = array_merge( $this->errors, $errors);
+        $this->errors = array_merge($this->errors, $errors);
         return (count($errors) == 0);
     }
 
@@ -355,7 +328,7 @@ class baseDAO
         return ($this->summary->errorNo == 0);
     }
 
-    function fetch()
+    public function fetch(): ?array
     {
         return $this->datasource->fetch($this->summary);
     }
@@ -426,10 +399,7 @@ class baseDAO
         $this->query_params = $params;
     }
 
-    /**
-     * @return mixed
-     */
-    public function getTable()
+    public function getTable(): string
     {
         return $this->table;
     }

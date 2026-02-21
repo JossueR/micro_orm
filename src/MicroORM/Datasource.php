@@ -1,31 +1,23 @@
 <?php
+declare(strict_types=1);
+
 namespace MicroORM;
 
 use Exception;
 
 class Datasource
 {
-    /***
-     * @var boolean
-     */
-    private $status;
+    private bool $status;
     private $connection;
-    /**
-     * @var bool
-     */
-    private $transaction_in_process;
+    private bool $transaction_in_process;
 
     private ?IQueryLogger $logger = null;
 
-    /**
-     * Datasource constructor.
-     * @throws Exception
-     */
-    public function __construct($host,$bd,$usuario,$pass, $port=null)
+    public function __construct(string $host, string $bd, string $usuario, string $pass, ?int $port = null)
     {
-        $this->status=false;
+        $this->status = false;
         $this->transaction_in_process = false;
-        $this->connect($host,$bd,$usuario,$pass, $port);
+        $this->connect($host, $bd, $usuario, $pass, $port);
     }
 
     public function getLogger(): IQueryLogger
@@ -41,75 +33,61 @@ class Datasource
 
 
 
-    /**
-     * @throws Exception
-     */
-    private function connect($host, $bd, $usuario, $pass, $port=null): void
+    private function connect(string $host, string $bd, string $usuario, string $pass, ?int $port = null): void
     {
-
-        $this->connection=mysqli_connect($host,$usuario,$pass,$bd, $port);
-        if($this->connection){
+        $this->connection = mysqli_connect($host, $usuario, $pass, $bd, $port);
+        if ($this->connection) {
             $this->status = true;
-        }else{
+        } else {
             throw new Exception('no conectado');
         }
-
     }
 
-    /**
-     * @param $sql
-     * @param bool $isSelect
-     * @param QueryParams|null $params
-     * @return QueryInfo
-     */
-    function &execQuery($sql, bool $isSelect= true, QueryParams $params=null): QueryInfo
+    public function &execQuery(string $sql, bool $isSelect = true, QueryParams $params = null): QueryInfo
     {
         $summary = new QueryInfo();
 
-        if($isSelect && $params != null){
+        if ($isSelect && $params !== null) {
             $sql = $this->addOrder($sql, $params);
             $sql = $this->addPagination($sql, $params);
         }
 
+        $result = mysqli_query($this->connection, $sql);
 
-        $summary->result = @mysqli_query($this->connection, $sql );
-
-        $summary->errorNo = mysqli_errno($this->connection);
-
-        $summary->error = mysqli_error($this->connection);
-
-        //almacena en el query info el último sql
-        $summary->sql = $sql;
-
-        $this->logger?->log($sql, $isSelect, $summary);
-
-        if($isSelect){
-
-            $summary->total  = ($summary->result)? intval(mysqli_num_rows($summary->result)) : 0;
-
-            if($params != null && $params->isEnablePaging()){
-                $sql = "SELECT FOUND_ROWS();";
-                $rows = @mysqli_query( $this->connection, $sql);
-                $rows = mysqli_fetch_row($rows);
-
-                $summary->allRows = $rows[0];
-            }
-        }else{
-            $summary->total = mysqli_affected_rows($this->connection);
-            $summary->allRows = $summary->total;
-            $summary->new_id = mysqli_insert_id($this->connection);
+        if ($result === false) {
+            $summary->errorNo = mysqli_errno($this->connection);
+            $summary->error = mysqli_error($this->connection);
+        } else {
+            $summary->result = is_bool($result) ? null : $result;
+            $summary->errorNo = 0;
         }
 
+        $summary->sql = $sql;
+        $this->logger?->log($sql, $isSelect, $summary);
 
+        if ($isSelect) {
+            $summary->total = ($summary->result) ? (int)mysqli_num_rows($summary->result) : 0;
 
+            if ($params !== null && $params->isEnablePaging()) {
+                $countSql = "SELECT FOUND_ROWS();";
+                $rowsResult = mysqli_query($this->connection, $countSql);
+                if ($rowsResult) {
+                    $rows = mysqli_fetch_row($rowsResult);
+                    $summary->allRows = (int)$rows[0];
+                }
+            }
+        } else {
+            $summary->total = (int)mysqli_affected_rows($this->connection);
+            $summary->allRows = $summary->total;
+            $summary->new_id = (int)mysqli_insert_id($this->connection);
+        }
 
         return $summary;
     }
 
-    public function execNoQuery($sql): bool
+    public function execNoQuery(string $sql): bool
     {
-        $summary = $this->execQuery($sql,false);
-
+        $summary = $this->execQuery($sql, false);
         return ($summary->errorNo == 0);
     }
 
@@ -415,18 +393,23 @@ class Datasource
         return implode(" ", $flags);
     }
 
-    public function setCharset($collation){
-        mysqli_set_charset($this->connection,$collation);
+    public function setCharset(string $charset): void
+    {
+        if (!mysqli_set_charset($this->connection, $charset)) {
+            throw new Exception("Error setting charset $charset: " . mysqli_error($this->connection));
+        }
     }
 
-    public function setUtf8(){
-        $this->setCharset("utf8");
+    public function setUtf8(): void
+    {
+        $this->setCharset("utf8mb4");
     }
 
-
-
-    public function setTimeZone($timezone){
-        @mysqli_query($this->connection, "SET time_zone = '$timezone'");
+    public function setTimeZone(string $timezone): void
+    {
+        if (!mysqli_query($this->connection, "SET time_zone = '$timezone'")) {
+            throw new Exception("Error setting timezone $timezone: " . mysqli_error($this->connection));
+        }
     }
 
     private function addPagination($sql, QueryParams $params)

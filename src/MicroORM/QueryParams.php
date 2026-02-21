@@ -1,29 +1,20 @@
 <?php
-
+declare(strict_types=1);
 
 namespace MicroORM;
 
 
 class QueryParams
 {
-    private $page;
-    private $cant_by_page;
+    private ?int $page = null;
+    private ?int $cant_by_page = null;
 
-    private $enable_paging = false;
-    private $enable_order = false;
-    /**
-     * @var array
-     */
-    private $order_fields;
+    private bool $enable_paging = false;
+    private bool $enable_order = false;
+    private array $order_fields = [];
 
-    /**
-     * @var string
-     */
-    private $pagination_replace_tag;
-    /**
-     * @var string
-     */
-    private $order_replace_tag;
+    private ?string $pagination_replace_tag = null;
+    private ?string $order_replace_tag = null;
 
 
     /**
@@ -65,29 +56,19 @@ class QueryParams
 
 
 
-    /**
-     * @param $cant_by_page
-     * @param int $page
-     */
-    public function setEnablePaging($cant_by_page, int $page=0)
+    public function setEnablePaging(int $cant_by_page, int $page = 0): void
     {
         $this->enable_paging = true;
         $this->cant_by_page = $cant_by_page;
         $this->page = $page;
     }
 
-    /**
-     * @return int
-     */
-    public function getPage(): int
+    public function getPage(): ?int
     {
         return $this->page;
     }
 
-    /**
-     * @return int
-     */
-    public function getCantByPage(): int
+    public function getCantByPage(): ?int
     {
         return $this->cant_by_page;
     }
@@ -110,16 +91,18 @@ class QueryParams
 
 
 
-    public function addOrderField($field, $asc=true){
-
-        if($field && $field != ''){
+    public function addOrderField(string $field, bool $asc = true): void
+    {
+        if ($field !== '') {
             $this->order_fields[$field] = $asc;
+            $this->enable_order = true;
         }
-
     }
 
-    public function removeOrder(){
-        $this->order_fields = array();
+    public function removeOrder(): void
+    {
+        $this->order_fields = [];
+        $this->enable_order = false;
     }
 
     /**
@@ -133,11 +116,12 @@ class QueryParams
         return $this->order_fields;
     }
 
-    public function copyFrom(QueryParams $old){
+    public function copyFrom(QueryParams $old): void
+    {
         $this->page = $old->page;
 
         $this->cant_by_page = $old->cant_by_page;
-        $this->enable_paging=$old->enable_paging;
+        $this->enable_paging = $old->enable_paging;
         $this->enable_order = $old->enable_order;
         $this->order_fields = $old->order_fields;
     }

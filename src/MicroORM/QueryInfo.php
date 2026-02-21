@@ -1,21 +1,23 @@
 <?php
+declare(strict_types=1);
+
 namespace MicroORM;
 
 class QueryInfo
 {
-    public $result = null;
+    public ?object $result = null;
 
-    public $total = null;
+    public ?int $total = null;
 
-    public $new_id = null;
+    public ?int $new_id = null;
 
-    public $allRows = null;
+    public ?int $allRows = null;
 
-    public $errorNo = null;
+    public ?int $errorNo = null;
 
-    public $error = null;
+    public ?string $error = null;
 
-    public $inArray = true;
+    public bool $inArray = true;
 
-    public $sql;
+    public ?string $sql = null;
 }

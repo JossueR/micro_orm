@@ -1,15 +1,12 @@
 <?php
-
+declare(strict_types=1);
 
 namespace MicroORM;
 
 
 class RawQueryFilter
 {
-    /**
-     * @var string
-     */
-    private $sql;
+    private string $sql;
 
     /**
      * RawQueryFilter constructor.
