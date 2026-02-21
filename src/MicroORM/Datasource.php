@@ -158,7 +158,7 @@ class Datasource
                 $str = "null";
             }else if(!($str instanceof RawQueryFilter)) {
 
-                $str = mysqli_real_escape_string($this->connection, $str);
+                $str = mysqli_real_escape_string($this->connection, (string)$str);
                 if($putQuotes){
                     $str = "'" . $str . "'";
                 }
