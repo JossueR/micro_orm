@@ -73,7 +73,7 @@ class ConnectionHolder
             $first = true;
             foreach ($config_array as $config){
 
-                    $ds = new Datasource($config["host"], $config["db"], $config["user"], $config["pass"], $config["port"] ?? 3306);
+                    $ds = new Datasource($config["host"], $config["db"], $config["user"], $config["pass"], (int)$config["port"] ?? 3306);
 
 
                     if(isset($config["utf8"]) && $config["utf8"]){
