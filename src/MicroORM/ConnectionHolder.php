@@ -35,8 +35,8 @@ class ConnectionHolder
 
 
 
-    private $lib;
-    private $default;
+    protected $lib;
+    protected $default;
 
     /**
      * @param $name
@@ -53,10 +53,10 @@ class ConnectionHolder
     }
 
     /**
-     * @param $name
+     * @param string $name
      * @return Datasource|null
      */
-    function getConnection($name): ?Datasource
+    function getConnection(string $name): ?Datasource
     {
         return $this->lib[$name] ?? null;
     }
@@ -69,11 +69,15 @@ class ConnectionHolder
         return $this->getConnection($this->default);
     }
 
+    /**
+     * @throws Exception
+     */
     function loadConfig($config_array): void
     {
         if(is_array($config_array)){
+            $first = true;
             foreach ($config_array as $config){
-                try {
+
                     $ds = new Datasource($config["host"], $config["db"], $config["user"], $config["pass"], $config["port"] ?? 3306);
 
 
@@ -81,16 +85,24 @@ class ConnectionHolder
                         $ds->setUtf8();
                     }
 
+                    if(isset($config["charset"])){
+                        $ds->setCharset($config["charset"]);
+                    }
+
                     if(isset($config["timezone"])){
                         $ds->setTimeZone($config["timezone"]);
                     }
 
+                    $isDefault = false;
+                    if($first || strtolower($config["name"]) == "main"){
+                        $isDefault = true;
+                        $first = false;
+                    }
 
-                    $this->add($config["name"], $ds);
 
-                } catch (Exception $e) {
+                    $this->add($config["name"], $ds, $isDefault);
 
-                }
+
             }
         }
     }

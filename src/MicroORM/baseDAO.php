@@ -6,14 +6,18 @@ namespace MicroORM;
 
 use Exception;
 
+/**
+ * Class baseDAO
+ *
+ * Provides a data access object (DAO) for managing database interactions.
+ * It includes methods for creating, updating, deleting, and validating database records.
+ */
 class baseDAO
 {
-    /**
-     * @var Datasource
-     */
-    private $datasource;
-    private $table;
-    private $id;
+
+    private ?Datasource $datasource = null;
+    private string $table;
+    private array $id;
 
     private $enableHistory;
     private $historyTable;
@@ -21,27 +25,35 @@ class baseDAO
     /**
      * @var QueryInfo
      */
-    private $summary;
+    private QueryInfo $summary;
     /**
      * @var array
      */
-    private $errors;
-    private $lastSelectQuery;
-    private $validate;
+    private array $errors;
+    private ?string $lastSelectQuery = null;
+    private bool $validate = true;
     /**
      * @var QueryParams
      */
-    private $query_params;
+    private QueryParams $query_params;
 
-    private $mainAlias;
+    private ?string $mainAlias = null;
 
     /**
-     * @throws Exception
+     * Constructor for initializing the object with a table, identifier, and optional datasource name.
+     *
+     * @param string $table The name of the database table.
+     * @param array $id The identifier values for the table.
+     * @param string|null $datasource_name Optional name of the datasource connection.
+     * @return void
+     * @throws Exception If no connection is found.
      */
-    function __construct($table, $id, $datasource=null) {
+    function __construct(string $table, array $id, ?string $datasource_name=null) {
 
-        if(!$datasource){
+        if(!$datasource_name){
             $datasource = ConnectionHolder::getInstance()->getDefaultConnection();
+        }else{
+            $datasource = ConnectionHolder::getInstance()->getConnection($datasource_name);
         }
 
         if(!$datasource){
@@ -58,17 +70,17 @@ class baseDAO
     }
 
     /**
-     * @return mixed
+     * @return string|null
      */
-    public function getMainAlias()
+    public function getMainAlias(): ?string
     {
         return $this->mainAlias;
     }
 
     /**
-     * @param mixed $mainAlias
+     * @param string|null $mainAlias
      */
-    public function setMainAlias($mainAlias): void
+    public function setMainAlias(?string $mainAlias): void
     {
         $this->mainAlias = $mainAlias;
     }
@@ -86,7 +98,7 @@ class baseDAO
     /**
      * @param bool $validate
      */
-    public function setValidate(bool $validate)
+    public function setValidate(bool $validate): void
     {
         $this->validate = $validate;
     }
@@ -101,7 +113,8 @@ class baseDAO
 
 
 
-    function setHistory($table, $map){
+    function setHistory($table, $map): void
+    {
         $this->enableHistory = true;
 
         $this->historyTable=$table;
