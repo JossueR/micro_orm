@@ -3,9 +3,11 @@ declare(strict_types=1);
 
 namespace MicroORM;
 
+use mysqli_result;
+
 class QueryInfo
 {
-    public ?object $result = null;
+    public ?mysqli_result $result = null;
 
     public ?int $total = null;
 

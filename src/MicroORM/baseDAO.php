@@ -38,7 +38,7 @@ class baseDAO
      * @param string|Datasource|null $datasource Optional datasource or name of the connection.
      * @throws Exception If no connection is found.
      */
-    public function __construct(string $table, array $id, $datasource = null)
+    public function __construct(string $table, array $id, Datasource|string|null $datasource = null)
     {
         if ($datasource instanceof Datasource) {
             $this->datasource = $datasource;
@@ -307,7 +307,7 @@ class baseDAO
      * @param QueryParams|null $params
      * @return bool
      */
-    public function find(string $sql, QueryParams $params=null): bool
+    public function find(string $sql, ?QueryParams $params=null): bool
     {
         $this->lastSelectQuery = $sql;
 
