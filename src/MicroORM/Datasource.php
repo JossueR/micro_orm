@@ -43,7 +43,7 @@ class Datasource
         }
     }
 
-    public function &execQuery(string $sql, bool $isSelect = true, QueryParams $params = null): QueryInfo
+    public function &execQuery(string $sql, bool $isSelect = true, ?QueryParams $params = null): QueryInfo
     {
         $summary = new QueryInfo();
 
